@@ -1,66 +1,86 @@
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
-from textblob import TextBlob
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout, GlobalAveragePooling1D
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+import tensorflow as tf
+import pickle
 
-def initialize_db():
-    interactions = pd.DataFrame(columns=['user_id', 'question', 'response', 'feedback'])
-    interactions.to_csv('interactions.csv', index=False)
+# Load the merged dataset
+data = pd.read_csv("final_merged_dataset.csv")
 
-def add_question_answer(question, answer):
-    interactions = pd.read_csv('interactions.csv')
-    new_interaction = pd.DataFrame([[None, question, answer, None]], columns=['user_id', 'question', 'response', 'feedback'])
-    interactions = pd.concat([interactions, new_interaction], ignore_index=True)
-    interactions.to_csv('interactions.csv', index=False)
+# Preprocessing: Handle missing data
+data['utterance'] = data['utterance'].fillna("No utterance provided.")
+data['response'] = data['response'].fillna("No response provided.")
 
-def get_answer(question):
-    interactions = pd.read_csv('interactions.csv')
-    answer = interactions.loc[interactions['question'] == question, 'response']
-    if not answer.empty:
-        return answer.iloc[0]
-    return None
+# Select input features and labels (Emotion Label for classification)
+X = data['utterance']
+y = data['emotion_label']  # or 'sentiment_label' for sentiment classification
 
-def get_all_interactions():
-    return pd.read_csv('interactions.csv')
+# Encode the labels (emotion_label or sentiment_label)
+label_encoder = LabelEncoder()
+y = label_encoder.fit_transform(y)
 
-def store_interaction(user_id, question, response):
-    interactions = pd.read_csv('interactions.csv')
-    new_interaction = pd.DataFrame([[user_id, question, response, None]], columns=['user_id', 'question', 'response', 'feedback'])
-    interactions = pd.concat([interactions, new_interaction], ignore_index=True)
-    interactions.to_csv('interactions.csv', index=False)
+# Tokenize the utterances (text)
+tokenizer = Tokenizer(num_words=5000)  # Use top 5000 words
+tokenizer.fit_on_texts(X)
+X = tokenizer.texts_to_sequences(X)
 
-def train_sentiment_model():
-    try:
-        interactions = pd.read_csv('interactions.csv')
-    except FileNotFoundError:
-        interactions = pd.DataFrame(columns=['user_id', 'question', 'response', 'feedback'])
+# Pad sequences to ensure uniform input length
+max_sequence_length = 100  # Adjust based on your data
+X = pad_sequences(X, maxlen=max_sequence_length)
 
-    vectorizer = TfidfVectorizer()
-    if interactions.empty:
-        # No data available to train the model, return None
-        return None, None
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    # Prepare the data
-    interactions['sentiment'] = interactions['question'].apply(lambda x: TextBlob(x).sentiment.polarity)
-    interactions['mood'] = interactions['sentiment'].apply(lambda x: 'positive' if x > 0 else 'negative' if x < 0 else 'neutral')
+# Model Architecture
+model = Sequential()
 
-    X = vectorizer.fit_transform(interactions['question'])
-    y = interactions['mood']
+# Embedding Layer
+model.add(Embedding(input_dim=5000, output_dim=128, input_length=max_sequence_length))
 
-    # Train the model
-    model = LogisticRegression()
-    model.fit(X, y)
+# LSTM Layer to capture sequential context
+model.add(LSTM(128, return_sequences=True))
+model.add(Dropout(0.2))  # To prevent overfitting
+model.add(LSTM(128))
+model.add(Dropout(0.2))
 
-    return model, vectorizer
+# Global average pooling
+model.add(Dense(64, activation='relu'))  # Directly using Dense instead of pooling
+model.add(Dropout(0.2))
 
-def predict_mood(model, vectorizer, question):
-    if model is None or vectorizer is None:
-        return 'neutral'  # Default mood if model or vectorizer is None
-    X = vectorizer.transform([question])
-    prediction = model.predict(X)
-    return prediction[0]
+# Output Layer - Softmax for multi-class classification (Emotion classification)
+model.add(Dense(len(label_encoder.classes_), activation='softmax'))
 
-def update_feedback(user_id, question, feedback):
-    interactions = pd.read_csv('interactions.csv')
-    interactions.loc[(interactions['user_id'] == user_id) & (interactions['question'] == question), 'feedback'] = feedback
-    interactions.to_csv('interactions.csv', index=False)
+# Compile the model
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+
+# Train the model
+history = model.fit(X_train, y_train, epochs=10, batch_size=64, validation_data=(X_test, y_test))
+
+# Save the trained model
+model.save("friendship_model.h5")
+
+# Evaluate the model
+loss, accuracy = model.evaluate(X_test, y_test)
+print(f"Test Accuracy: {accuracy * 100:.2f}%")
+
+# Save the LabelEncoder for later use
+with open("label_encoder.pkl", 'wb') as f:
+    pickle.dump(label_encoder, f)
+
+# Print dataset shapes
+print(f"X_train shape: {X_train.shape}")
+print(f"X_test shape: {X_test.shape}")
+
+
+
+
+
+
+
+
+
