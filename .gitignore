@@ -1,1 +1,26 @@
-.env
+# Python bytecode files
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# IDE or editor directories
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Model and tokenizer files
+*.h5
+*.pkl
+
+# Log files
+*.log
+
+# Data files (if not needed)
+*.csv
