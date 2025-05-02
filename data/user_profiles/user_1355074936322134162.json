@@ -1,0 +1,56 @@
+{
+  "created_at": "2025-05-02T11:53:00.212404",
+  "updated_at": "2025-05-02T13:35:52.954996",
+  "message_count": 15,
+  "average_message_length": 3.466666666666667,
+  "communication_style": {
+    "formality": 0.32805000000000006,
+    "verbosity": 0.19756125712769254,
+    "emotionality": 0.5,
+    "assertiveness": 0.5,
+    "positivity": 0.55,
+    "humor": 0.5
+  },
+  "topic_preferences": {
+    "personal": 0.5,
+    "professional": 0.5,
+    "intellectual": 0.5,
+    "recreational": 0.55,
+    "social": 0.5,
+    "emotional": 0.5
+  },
+  "response_preferences": {
+    "advice_seeking": 0.5,
+    "validation_seeking": 0.5,
+    "emotional_support": 0.5,
+    "practical_support": 0.5,
+    "intellectual_discussion": 0.5
+  },
+  "interaction_preferences": {
+    "response_length": 0.19756125712769254,
+    "response_time": 0.5,
+    "conversation_pacing": 0.4835802227586099,
+    "initiative": 0.843094701955
+  },
+  "explicit_preferences": {},
+  "detected_interests": {
+    "to watch football": 1,
+    "it basically": 1,
+    "girls like you": 1
+  },
+  "detected_dislikes": {},
+  "conversation_history_stats": {
+    "total_conversations": 0,
+    "total_messages": 0,
+    "average_conversation_length": 0,
+    "peak_activity_times": {}
+  },
+  "emotional_patterns": {
+    "joy": 0,
+    "sadness": 0,
+    "anger": 0,
+    "fear": 0,
+    "surprise": 0,
+    "neutral": 0
+  }
+}
