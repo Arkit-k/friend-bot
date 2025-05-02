@@ -674,6 +674,22 @@ async def gemini_command(ctx, action=None, *, value=None):
 # Run the bot (token should be stored in environment variable or config file)
 def run_bot(token):
     """Run the Discord bot with the provided token."""
+    # Check if we're running on a hosting platform that needs a keep-alive server
+    try:
+        # Try to import the keep_alive module
+        from keep_alive import keep_alive
+
+        # Start the keep-alive server
+        print("Starting keep-alive server for hosting platforms...")
+        keep_alive()
+    except ImportError:
+        # If the module is not found, it's okay - we're probably running locally
+        print("Keep-alive server not started (running locally)")
+    except Exception as e:
+        # If there's another error, log it but continue
+        print(f"Error starting keep-alive server: {e}")
+
+    # Run the bot
     bot.run(token)
 
 if __name__ == "__main__":
